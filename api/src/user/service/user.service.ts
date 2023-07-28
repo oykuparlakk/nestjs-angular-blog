@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, map, Observable } from 'rxjs';
 import { AuthService } from 'src/auth/service/auth.service';
-import { FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, Like, Repository } from 'typeorm';
 import { UserEntity } from '../models/user.entity';
 import { User, UserRole } from '../models/user.interface';
 import {
@@ -93,6 +93,57 @@ export class UserService {
         usersPageable.items.forEach(function (v) {
           delete v.password;
         });
+        return usersPageable;
+      }),
+    );
+  }
+
+  paginateFilterByUsername(
+    options: IPaginationOptions,
+    username: string,
+  ): Observable<Pagination<User>> {
+    const limit = parseInt(options.limit as string, 10) || 10; // Convert to a number or fallback to a default value (e.g., 10)
+
+    return from(
+      this.userRepository.findAndCount({
+        skip: Number(options.page) * Number(limit) || 0,
+        take: limit,
+        order: { id: 'ASC' },
+        select: ['id', 'name', 'username', 'email', 'role'],
+        where: [
+          {
+            username: Like(`%${username}`),
+          },
+        ],
+      }),
+    ).pipe(
+      map(([users, totalUsers]) => {
+        const usersPageable: Pagination<User> = {
+          items: users.map((userEntity: UserEntity) => ({
+            id: userEntity.id,
+            name: userEntity.name,
+            username: userEntity.username,
+            email: userEntity.email,
+            role: userEntity.role,
+          })),
+          links: {
+            first: options.route + `?limit=${limit}`,
+            previous: options.route + ``,
+            next:
+              options.route +
+              `?limit=${limit}&page=${Number(options.page) + 1}`,
+            last:
+              options.route +
+              `?limit=${limit}&page=${Math.ceil(totalUsers / limit)}`,
+          },
+          meta: {
+            currentPage: Number(options.page),
+            itemCount: users.length,
+            itemsPerPage: limit,
+            totalItems: totalUsers,
+            totalPages: Math.ceil(totalUsers / limit),
+          },
+        };
         return usersPageable;
       }),
     );
