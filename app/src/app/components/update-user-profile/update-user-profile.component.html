@@ -1,1 +1,24 @@
-<p>is authenticated!</p>
+<form [formGroup]="form" (ngSubmit)="update()">
+    <div>
+        <mat-card class="container">
+
+            <div class="container" style="width: 80%;">
+                <mat-form-field>
+                    <input matInput placeholder="ID" formControlName="id">
+                </mat-form-field>
+
+                <mat-form-field>
+                    <input matInput placeholder="Name" formControlName="name">
+                </mat-form-field>
+
+                <mat-form-field>
+                    <input matInput placeholder="Username" formControlName="username">
+                </mat-form-field>
+            </div>
+            <p>devamı gelecek</p>
+           
+            <button mat-flat-button color="primary" [disabled]="!form.valid" type="submit">Update Profile</button>
+
+        </mat-card>
+    </div>
+</form>

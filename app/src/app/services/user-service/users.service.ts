@@ -32,6 +32,10 @@ export class UsersService {
     );
   }
 
+  updateOne(user: any): Observable<User> {
+    return this.http.put<User>('api/users/' + user.id, user);
+  }
+
   findAll(page: number, size: number): Observable<UserData> {
     let params = new HttpParams();
   

@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs';
+import { map, Observable, of, switchMap } from 'rxjs';
 import { JwtHelperService } from "@auth0/angular-jwt";
 
 
 export interface User{
+  id?: number
   name:string;
   username:string;
   email:string;
@@ -44,5 +45,22 @@ export class AuthenticationService {
   isAuthenticated(): boolean {
     const token = localStorage.getItem(JWT_NAME);
     return !this.jwtHelper.isTokenExpired(token);
+  }
+
+  async getUserId(): Promise<number> {
+    const jwt = localStorage.getItem(JWT_NAME);
+    
+    if (jwt === null) {
+      return Promise.reject('JWT not found');
+    }
+    try {
+      const decodedToken: any = this.jwtHelper.decodeToken(jwt);
+      if (!decodedToken || !decodedToken.user || !decodedToken.user.id) {
+        return Promise.reject('Invalid JWT token');
+      }
+      return Promise.resolve(decodedToken.user.id);
+    } catch (error) {
+      return Promise.reject('Error decoding JWT');
+    }
   }
 }
