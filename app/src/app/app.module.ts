@@ -17,6 +17,7 @@ import {MatSelectModule} from '@angular/material/select';
 import { UsersComponent } from './components/users/users.component';
 import {MatTableModule} from '@angular/material/table';
 import {MatPaginatorModule} from '@angular/material/paginator';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 
 @NgModule({
@@ -24,7 +25,8 @@ import {MatPaginatorModule} from '@angular/material/paginator';
     AppComponent,
     LoginComponent,
     RegisterComponent,
-    UsersComponent
+    UsersComponent,
+    UserProfileComponent
   ],
   imports: [
     BrowserModule,
