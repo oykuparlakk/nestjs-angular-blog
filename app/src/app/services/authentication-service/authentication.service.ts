@@ -8,6 +8,7 @@ export interface User{
   email:string;
   password:string;
   role?:string;
+  profileImage?:string;
   //confirmPassword:string;
 }
 @Injectable({

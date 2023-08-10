@@ -7,8 +7,13 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
+  Request,
+  Res,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { Observable } from 'rxjs';
 
@@ -17,6 +22,37 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-guard';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { User, UserRole } from '../models/user.interface';
 import { UserService } from '../service/user.service';
+import { diskStorage } from 'multer';
+import path, { join } from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { Response } from 'express';
+import { UserIsUserGuard } from 'src/auth/guards/UserIsUser.guard';
+
+@Controller()
+export class YourControllerName {
+  // ...
+
+  @Get('profile-image/:imagename')
+  async findProfileImage(
+    @Param('imagename') imagename,
+    @Res() res: Response,
+  ): Promise<void> {
+    res.sendFile(join(process.cwd(), 'uploads/profileimages/' + imagename));
+  }
+}
+
+export const storage = {
+  storage: diskStorage({
+    destination: './uploads/profileimages',
+    filename: (req, file, cb) => {
+      const filename: string =
+        path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
+      const extension: string = path.parse(file.originalname).ext;
+
+      cb(null, `${filename}${extension}`);
+    },
+  }),
+};
 
 @Controller('users')
 export class UserController {
@@ -69,6 +105,8 @@ export class UserController {
   deleteOne(@Param('id') id: string): Promise<any> {
     return this.userService.deleteOne(Number(id));
   }
+
+  @UseGuards(JwtAuthGuard, UserIsUserGuard)
   @Put(':id')
   updateOne(@Param('id') id: string, @Body() user: User): Promise<any> {
     return this.userService.updateOne(Number(id), user);
@@ -79,5 +117,26 @@ export class UserController {
   @Put(':id/role')
   updateRoleOfUser(@Param('id') id: string, @Body() user: User): Promise<User> {
     return this.userService.updateRoleOfUser(Number(id), user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', storage))
+  async uploadFile(@UploadedFile() file, @Request() req): Promise<User> {
+    const user: User = req.user;
+
+    const updatedUser = await this.userService.updateOne(user.id, {
+      profileImage: file.filename,
+    });
+
+    return updatedUser;
+  }
+
+  @Get('profile-image/:imagename')
+  async findProfileImage(
+    @Param('imagename') imagename,
+    @Res() res: Response,
+  ): Promise<void> {
+    res.sendFile(join(process.cwd(), 'uploads/profileimages/' + imagename));
   }
 }
