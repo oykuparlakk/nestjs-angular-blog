@@ -64,6 +64,7 @@ export class RegisterComponent {
     if(this.registerForm?.invalid){
       return;
     }
+    console.log("buradayım be buradayımmm")
     this.authService.register(this.registerForm.value).pipe(
       map(user=> this.router.navigate(['login']))
     ).subscribe();
